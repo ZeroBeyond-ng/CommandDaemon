@@ -1,0 +1,4 @@
+#+TITLE:Daemon
+* 基本设计
+** config file
+保存各类配置
