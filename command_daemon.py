@@ -4,16 +4,10 @@
 # listen for requests, and executes the command.
 #
 import os
-import grp
 import signal
 import daemon
 import lockfile
-
-def initial_program_setup():
-    pass
-
-def do_main_program():
-    pass
+from flask import Flask  
 
 def program_cleanup():
     pass
@@ -22,9 +16,9 @@ def reload_program_config():
     pass
 
 context = daemon.DaemonContext(
-    working_directory='/var/lib/foo',
+    working_directory='/var/cmd_daemon',
     umask=0o002,
-    pidfile=lockfile.FileLock('/var/run/spam.pid'),
+    pidfile=lockfile.FileLock('/var/run/cmd_daemon.pid'),
     )
 
 context.signal_map = {
@@ -33,14 +27,14 @@ context.signal_map = {
     signal.SIGUSR1: reload_program_config,
     }
 
-mail_gid = grp.getgrnam('mail').gr_gid
-context.gid = mail_gid
+cmd_file = open('cmd.sh', 'w')
+context.files_preserve = [cmd_file]
 
-important_file = open('spam.data', 'w')
-interesting_file = open('eggs.data', 'w')
-context.files_preserve = [important_file, interesting_file]
-
-initial_program_setup()
+# start the main program
+app=Flask(__name__) 
+@app.route('/') 
+def func():  
+    return 'Daemonize Test!'
 
 with context:
-    do_main_program()
+    app.run()

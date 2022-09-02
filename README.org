@@ -3,9 +3,17 @@
 ** config file
 保存各类配置
 
+* 依赖项
+** python-daemon
+#+begin_src bash
+pip install python-daemon
+#+end_src
 * 参考资料
 ** Python Daemon
 https://peps.python.org/pep-3143/
+
+** pid lock file
+https://unix.stackexchange.com/questions/12815/what-are-pid-and-lock-files-for#:~:text=The%20PID%20file%20usually%20contains%20the%20process%20ID,it%20won%27t%20start%20another%20one%20without%20user%20intervention.
 
 * 扩展研究
 ** Rust
