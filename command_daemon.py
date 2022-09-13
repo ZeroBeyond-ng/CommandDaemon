@@ -82,4 +82,5 @@ def run_web_app():
     app.run(host = '0.0.0.0', port=17777)
 
 with context:
+    run_web_app()
     logging_forever(log_file)
