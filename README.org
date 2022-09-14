@@ -1,4 +1,39 @@
 #+TITLE:Daemon
-* 基本设计
-** config file
-保存各类配置
+* 安装部署说明
+#+begin_src bash
+sudo apt install python3-pip
+pip3 install python-daemon flask 
+pip3 install argparse #可能依赖
+#+end_src
+
+* 运行说明
+** 启动
+#+begin_src bash
+python3 command_daemon.py --host 0.0.0.0 --port 17777 --script /var/tmp/cmd_daemon/cmd.sh
+#+end_src
+
+其中，--host输入daemon要绑定的地址，--port代表daemon监听的端口，--script表示要执行的脚本的 *绝对路径* 。
+
+** 执行脚本
+#+begin_src bash
+curl -X POST -F  "command=exec" http://127.0.0.1:17777
+#+end_src
+
+** 退出
+#+begin_src bash
+curl -X POST -F  "command=exit" http://127.0.0.1:17777
+#+end_src
+
+** 运行维护
+本daemon默认的工作路径是 ~/var/tmp/cmd_daemon~ ，启动时会创建此文件夹。
+由于daemon本身理论上不绑定任何终端，因而daemon本身的标准输出在 ~/var/tmp/cmd_daemon/stdout.txt~ ，
+标准错误在 ~/var/tmp/cmd_daemon/stderr.txt~ 。
+可以通过 ~cat~ 这两个文件查看。
+另外，daemon程序本身的日志文件在 ~/var/tmp/cmd_daemon/daemon-log.txt~ ，可以查看一些日志信息。
+
+
+
+
+
+
+

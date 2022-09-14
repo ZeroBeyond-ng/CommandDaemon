@@ -4,16 +4,23 @@
 # listen for requests, and executes the command.
 #
 import os
-import grp
 import signal
 import daemon
 import lockfile
+import subprocess
+from flask import Flask  
+from flask import request
+from time import gmtime, strftime
+import argparse
 
-def initial_program_setup():
-    pass
+# constants 
+work_dir='/var/tmp/cmd_daemon' 
+if not os.path.exists(work_dir):
+    os.mkdir(work_dir)
 
-def do_main_program():
-    pass
+stderr_file = open('/var/tmp/cmd_daemon/stderr.txt', 'w+')
+stdout_file = open('/var/tmp/cmd_daemon/stdout.txt', 'w+')
+log_file = open('/var/tmp/cmd_daemon/daemon-log.txt', 'w+')
 
 def program_cleanup():
     pass
@@ -21,10 +28,13 @@ def program_cleanup():
 def reload_program_config():
     pass
 
+
 context = daemon.DaemonContext(
-    working_directory='/var/lib/foo',
+    working_directory=work_dir,
     umask=0o002,
-    pidfile=lockfile.FileLock('/var/run/spam.pid'),
+    pidfile=lockfile.FileLock('/var/tmp/cmd_daemon/lock.pid'),
+    stderr=stderr_file,
+    stdout=stdout_file
     )
 
 context.signal_map = {
@@ -33,14 +43,47 @@ context.signal_map = {
     signal.SIGUSR1: reload_program_config,
     }
 
-mail_gid = grp.getgrnam('mail').gr_gid
-context.gid = mail_gid
+context.files_preserve = [log_file]
 
-important_file = open('spam.data', 'w')
-interesting_file = open('eggs.data', 'w')
-context.files_preserve = [important_file, interesting_file]
+def exec(script):
+    subprocess.call(script)
 
-initial_program_setup()
+def create_app(script):
+    # start the main program
+    app=Flask(__name__) 
+    @app.route('/', methods=["POST", "GET"]) 
+    def func():  
+        log_file.write("[{}] {}\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), "Got Request"))
+        if request.method == 'POST':
+            cmd = request.form['command']
+            if cmd == 'exec':
+                exec(script)
+                log_file.write("[{}] {}\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), "Execute the scripts"))
+                return "Execute the scripts!"
+            elif cmd == 'exit':
+                log_file.write("[{}] {}\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), "Exits!"))
+                os._exit(0)
+                return "Exits!"
+            else:
+                return "Unkown command!"
+        else:
+            return "Hello CmdDaemon!"
+    return app
 
-with context:
-    do_main_program()
+def run_web_service(host, port, script):
+    app = create_app(script)
+    app.run(host = host, port=port)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, required=True)
+    parser.add_argument('--port', type=int, required=True)
+    parser.add_argument('--script', type=str, required=True)
+    args = parser.parse_args()
+    host = args.host
+    port = args.port
+    script = args.script
+
+    with context:
+        run_web_service(host, port, script)
+
