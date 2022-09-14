@@ -9,6 +9,7 @@ import daemon
 import lockfile
 import subprocess
 from flask import Flask  
+from flask import request
 
 # constants 
 work_dir='/var/tmp/cmd_daemon' 
@@ -40,23 +41,22 @@ context.signal_map = {
     signal.SIGUSR1: reload_program_config,
     }
 
-cmd_file = open('cmd.sh', 'w')
-
-context.files_preserve = [cmd_file, log_file]
+context.files_preserve = [log_file]
 
 def exec():
-    subprocess.call("cmd.sh")
+    subprocess.call("/var/tmp/cmd_daemon/cmd.sh")
 
-def create_app():
+def create_app(log_file):
     # start the main program
     app=Flask(__name__) 
     @app.route('/', methods=["POST", "GET"]) 
     def func():  
-        log_file.write("aaaaaaaa\n")
+        log_file.write("Got request!")
         if request.method == 'POST':
             cmd = request.form['command']
             if cmd == 'exec':
                 exec()
+                return "Execute the scripts!"
         else:
             return "Hello CmdDaemon!"
 
@@ -74,13 +74,11 @@ def create_app1():
 
 def logging_forever(log_file):
     while True:
-        print("Daemon")
         log_file.write("Logging...")
 
 def run_web_app():
-    app = create_app1()
+    app = create_app(log_file)
     app.run(host = '0.0.0.0', port=17777)
 
 with context:
     run_web_app()
-    logging_forever(log_file)
