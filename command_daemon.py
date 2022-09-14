@@ -10,6 +10,7 @@ import lockfile
 import subprocess
 from flask import Flask  
 from flask import request
+import argparse
 
 # constants 
 work_dir='/var/tmp/cmd_daemon' 
@@ -43,10 +44,10 @@ context.signal_map = {
 
 context.files_preserve = [log_file]
 
-def exec():
-    subprocess.call("/var/tmp/cmd_daemon/cmd.sh")
+def exec(script):
+    subprocess.call(script)
 
-def create_app(log_file):
+def create_app(script):
     # start the main program
     app=Flask(__name__) 
     @app.route('/', methods=["POST", "GET"]) 
@@ -55,30 +56,31 @@ def create_app(log_file):
         if request.method == 'POST':
             cmd = request.form['command']
             if cmd == 'exec':
-                exec()
+                exec(script)
                 return "Execute the scripts!"
+            elif cmd == 'exit':
+                exit()
+                return "Exits!"
+            else:
+                return "Unkown command!"
         else:
             return "Hello CmdDaemon!"
-
     return app
 
+def run_web_service(host, port, script):
+    app = create_app(script)
+    app.run(host = host, port=port)
 
-def create_app1():
-    # start the main program
-    app=Flask(__name__) 
-    @app.route('/') 
-    def func():  
-        return "Hello CmdDaemon!"
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, required=True)
+    parser.add_argument('--port', type=int, required=True)
+    parser.add_argument('--script', type=str, required=True)
+    args = parser.parse_args()
+    host = args.host
+    port = args.port
+    script = args.script
 
-    return app
+    with context:
+        run_web_service(host, port, script)
 
-def logging_forever(log_file):
-    while True:
-        log_file.write("Logging...")
-
-def run_web_app():
-    app = create_app(log_file)
-    app.run(host = '0.0.0.0', port=17777)
-
-with context:
-    run_web_app()
