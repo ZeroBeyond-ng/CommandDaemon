@@ -10,6 +10,7 @@ import lockfile
 import subprocess
 from flask import Flask  
 from flask import request
+from time import gmtime, strftime
 import argparse
 
 # constants 
@@ -52,14 +53,16 @@ def create_app(script):
     app=Flask(__name__) 
     @app.route('/', methods=["POST", "GET"]) 
     def func():  
-        log_file.write("Got request!")
+        log_file.write("[{}] {}\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), "Got Request"))
         if request.method == 'POST':
             cmd = request.form['command']
             if cmd == 'exec':
                 exec(script)
+                log_file.write("[{}] {}\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), "Execute the scripts"))
                 return "Execute the scripts!"
             elif cmd == 'exit':
-                exit()
+                log_file.write("[{}] {}\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), "Exits!"))
+                os._exit(0)
                 return "Exits!"
             else:
                 return "Unkown command!"
