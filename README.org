@@ -1,20 +1,27 @@
 #+TITLE:Daemon
-* 基本设计
-** config file
-保存各类配置
-
-* 依赖项
-** python-daemon
+* 安装部署说明
 #+begin_src bash
-pip install python-daemon
+sudo apt install python3-pip
+pip3 install python-daemon flask
 #+end_src
-* 参考资料
-** Python Daemon
-https://peps.python.org/pep-3143/
 
-** pid lock file
-https://unix.stackexchange.com/questions/12815/what-are-pid-and-lock-files-for#:~:text=The%20PID%20file%20usually%20contains%20the%20process%20ID,it%20won%27t%20start%20another%20one%20without%20user%20intervention.
+* 运行说明
+** 启动
+#+begin_src bash
+python3 command_daemon.py
+#+end_src
 
-* 扩展研究
-** Rust
-https://docs.rs/daemonize/latest/daemonize/
+** 执行脚本
+#+begin_src bash
+curl -X POST -F  "command=exec" http://127.0.0.1:17777
+#+end_src
+
+** 退出
+#+begin_src bash
+curl -X POST -F  "command=exit" http://127.0.0.1:17777
+#+end_src
+
+
+
+
+
